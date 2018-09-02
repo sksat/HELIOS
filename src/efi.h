@@ -45,6 +45,9 @@ namespace EFI {
 	struct BOOT_SERVICES;
 	struct SYSTEM_TABLE;
 
+	struct GRAPHICS_OUTPUT_BLT_PIXEL;
+	struct GRAPHICS_OUTPUT_PROTOCOL;
+
 	struct TABLE_HEADER {
 		uint64_t signature;
 		uint32_t revision;
@@ -162,5 +165,35 @@ namespace EFI {
 		uint64_t _buf[2];
 		RUNTIME_SERVICES *runtime_services;
 		BOOT_SERVICES *boot_services;
+	};
+
+	struct GRAPHICS_OUTPUT_BLT_PIXEL {
+		uint8_t blue;
+		uint8_t green;
+		uint8_t red;
+		uint8_t reserved;
+	};
+
+	struct GRAPHICS_OUTPUT_PROTOCOL {
+		uint64_t _buf[3];
+		struct MODE {
+			unsigned int max_mode;
+			unsigned int mode;
+			struct INFO {
+				unsigned int version;
+				unsigned int horizontal_resolution;
+				unsigned int vertical_resolution;
+				enum PIXEL_FORMAT {
+					RGB, // PixelRedGreenBlueReserved8BitPerColor
+					BGR, // PixelBlueGreenRedReserved8BitPerColor
+					BitMask,
+					BitOnly,
+					PixelFormatMax
+				} PixelFormat;
+			} *info;
+			uint64_t size_of_info;
+			uint64_t frame_buf_base;
+			uint64_t frame_buf_size;
+		} *mode;
 	};
 }
