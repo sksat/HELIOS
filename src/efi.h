@@ -3,6 +3,9 @@
 namespace EFI {
 	using status = uint64_t;
 	using handle = void*;
+	using uintn_t= uint64_t;
+	using intn_t = int64_t;
+	using paddr_t= uint64_t; // PHYSICAL_ADDRESS
 
 	enum class ResetType {
 		Cold,
@@ -47,6 +50,9 @@ namespace EFI {
 
 	struct GRAPHICS_OUTPUT_BLT_PIXEL;
 	struct GRAPHICS_OUTPUT_PROTOCOL;
+
+	// using
+	using color_t = GRAPHICS_OUTPUT_BLT_PIXEL;
 
 	struct TABLE_HEADER {
 		uint64_t signature;
@@ -116,6 +122,14 @@ namespace EFI {
 		unsigned char data4[8];
 	};
 
+	// GUID
+	namespace PROTOCOL_GUID {
+		inline GUID GRAPHICS_OUTPUT = {
+			0x9042a9de, 0x23dc, 0x4a38,
+            {0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a}
+		};
+	}
+
 	struct BOOT_SERVICES {
 		char _buf[24];
 		uint64_t _buf2[2];
@@ -174,15 +188,21 @@ namespace EFI {
 		uint8_t reserved;
 	};
 
+	enum class GRAPHICS_OUTPUT_BLT_OPERATION {
+		VideoFill,
+		VideoToBltBuffer,
+		BufferToVideo,
+		GraphicsBltOperationMax
+	};
+
 	struct GRAPHICS_OUTPUT_PROTOCOL {
-		uint64_t _buf[3];
 		struct MODE {
-			unsigned int max_mode;
-			unsigned int mode;
+			uint32_t max_mode;
+			uint32_t mode;
 			struct INFO {
-				unsigned int version;
-				unsigned int horizontal_resolution;
-				unsigned int vertical_resolution;
+				uint32_t version;
+				uint32_t horizontal_resolution;
+				uint32_t vertical_resolution;
 				enum PIXEL_FORMAT {
 					RGB, // PixelRedGreenBlueReserved8BitPerColor
 					BGR, // PixelBlueGreenRedReserved8BitPerColor
@@ -190,10 +210,29 @@ namespace EFI {
 					BitOnly,
 					PixelFormatMax
 				} pixel_format;
+				struct PIXEL_BITMASK {
+					uint32_t red;
+					uint32_t green;
+					uint32_t blue;
+					uint32_t reserved;
+				} pixel_info;
+				uint32_t pixels_per_scanline;
 			} *info;
-			uint64_t size_of_info;
-			uint64_t frame_buf_base;
-			uint64_t frame_buf_size;
-		} *mode;
+			uintn_t size_of_info;
+			paddr_t frame_buf_base;
+			uintn_t frame_buf_size;
+		};
+
+		status (*query_mode)(GRAPHICS_OUTPUT_PROTOCOL*,
+							uint32_t mode_number, uintn_t *size_of_info,
+							MODE::INFO **info);
+		status (*set_mode)(GRAPHICS_OUTPUT_PROTOCOL*, uint32_t mode_number);
+		status (*blt)(GRAPHICS_OUTPUT_PROTOCOL*, GRAPHICS_OUTPUT_BLT_PIXEL *buf,
+						GRAPHICS_OUTPUT_BLT_OPERATION blt_operation,
+						uintn_t src_x, uintn_t src_y,
+						uintn_t dest_x, uintn_t dest_y,
+						uintn_t width, uintn_t height,
+						uintn_t delta);
+		MODE *mode;
 	};
 }
