@@ -189,7 +189,7 @@ namespace EFI {
 					BitMask,
 					BitOnly,
 					PixelFormatMax
-				} PixelFormat;
+				} pixel_format;
 			} *info;
 			uint64_t size_of_info;
 			uint64_t frame_buf_base;
