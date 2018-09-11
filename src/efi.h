@@ -5,7 +5,10 @@ namespace EFI {
 	using handle = void*;
 	using uintn_t= uint64_t;
 	using intn_t = int64_t;
+	using char16 = uint16_t;
 	using paddr_t= uint64_t; // PHYSICAL_ADDRESS
+
+	using BOOL = unsigned char;
 
 	enum class ResetType {
 		Cold,
@@ -44,12 +47,18 @@ namespace EFI {
 	struct SIMPLE_TEXT_OUTPUT_PROTOCOL;
 	struct RUNTIME_SERVICES;
 	struct MEMORY_DESCRIPTOR;
+	struct DEVICE_PATH_PROTOCOL;
+	struct DEVICE_PATH_TO_TEXT_PROTOCOL;
 	struct GUID;
 	struct BOOT_SERVICES;
 	struct SYSTEM_TABLE;
 
 	struct GRAPHICS_OUTPUT_BLT_PIXEL;
 	struct GRAPHICS_OUTPUT_PROTOCOL;
+
+	struct LOADED_IMAGE_PROTOCOL;
+
+	using IMAGE_UNLOAD = status (*)(handle image_handle);
 
 	// using
 	using color_t = GRAPHICS_OUTPUT_BLT_PIXEL;
@@ -115,6 +124,11 @@ namespace EFI {
 		unsigned char length[2];
 	};
 
+	struct DEVICE_PATH_TO_TEXT_PROTOCOL {
+		char16* (*convert_devnode2text)();
+		char16* (*convert_devpath2text)(const DEVICE_PATH_PROTOCOL *device_path, BOOL display_only, BOOL allow_shortcuts);
+	};
+
 	struct GUID {
 		unsigned int data1;
 		unsigned short data2;
@@ -127,6 +141,14 @@ namespace EFI {
 		inline GUID GRAPHICS_OUTPUT = {
 			0x9042a9de, 0x23dc, 0x4a38,
             {0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a}
+		};
+		inline GUID LOADED_IMAGE = {
+			0x5b1b31a1, 0x9562, 0x11d2,
+			{0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b}
+		};
+		inline GUID DEVICE_PATH_TO_TEXT = {
+			0x8b843e20, 0x8132, 0x4852,
+			{0x90, 0xcc, 0x55, 0x1a, 0x4e, 0x4a, 0x7f, 0x1c}
 		};
 	}
 
@@ -156,6 +178,14 @@ namespace EFI {
 		uint64_t (*set_watchdog_timer)(uint64_t timeout, uint64_t watchdog_code,
 										uint64_t data_size, unsigned short *watchdog_data);
 		uint64_t _buf8[2];
+		enum class OpenProtocol : uint32_t {
+			ByHandleProtocol	= 0x00000001,
+			GetProtocol			= 0x00000002,
+			TestProtocol		= 0x00000004,
+			ByChildController	= 0x00000008,
+			ByDriver			= 0x00000010,
+			Exclusive			= 0x00000020
+		};
 		uint64_t (*open_protocol)(void *handle, GUID *protocol, void **interface,
 									void *agent_handle, void *controller_handle, unsigned int attributes);
 		uint64_t _buf9[2];
@@ -234,5 +264,21 @@ namespace EFI {
 						uintn_t width, uintn_t height,
 						uintn_t delta);
 		MODE *mode;
+	};
+
+	struct LOADED_IMAGE_PROTOCOL {
+		uint32_t revision;
+		handle parent_handle;
+		SYSTEM_TABLE *system_table;
+		handle device_handle;
+		DEVICE_PATH_PROTOCOL *file_path;
+		void *reserved;
+		uint32_t load_option_size;
+		void *load_options;
+		void *image_base;
+		uint64_t image_size;
+		MemoryType image_code_type;
+		MemoryType image_data_type;
+		IMAGE_UNLOAD unload;
 	};
 }
