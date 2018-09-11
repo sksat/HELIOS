@@ -49,6 +49,7 @@ namespace EFI {
 	struct MEMORY_DESCRIPTOR;
 	struct DEVICE_PATH_PROTOCOL;
 	struct DEVICE_PATH_TO_TEXT_PROTOCOL;
+	struct DEVICE_PATH_FROM_TEXT_PROTOCOL;
 	struct GUID;
 	struct BOOT_SERVICES;
 	struct SYSTEM_TABLE;
@@ -129,6 +130,11 @@ namespace EFI {
 		char16* (*convert_devpath2text)(const DEVICE_PATH_PROTOCOL *device_path, BOOL display_only, BOOL allow_shortcuts);
 	};
 
+	struct DEVICE_PATH_FROM_TEXT_PROTOCOL {
+		DEVICE_PATH_PROTOCOL* (*convert_text2devnode)(char16* text);
+		DEVICE_PATH_PROTOCOL* (*convert_text2devpath)(char16* text);
+	};
+
 	struct GUID {
 		unsigned int data1;
 		unsigned short data2;
@@ -149,6 +155,10 @@ namespace EFI {
 		inline GUID DEVICE_PATH_TO_TEXT = {
 			0x8b843e20, 0x8132, 0x4852,
 			{0x90, 0xcc, 0x55, 0x1a, 0x4e, 0x4a, 0x7f, 0x1c}
+		};
+		inline GUID DEVICE_PATH_FROM_TEXT = {
+			0x5c99a21, 0xc70f, 0x4ad2,
+			{0x8a, 0x5f, 0x35, 0xdf, 0x33, 0x43, 0xf5, 0x1e}
 		};
 	}
 

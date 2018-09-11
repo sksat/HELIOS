@@ -63,16 +63,23 @@ void efi_main(void *image_handle, EFI::SYSTEM_TABLE *system_table){
 	auto status = bootsrv->open_protocol(image_handle, &PROTOCOL_GUID::LOADED_IMAGE,
 			(void**)&LIP, image_handle, 0, static_cast<uint32_t>(BOOT_SERVICES::OpenProtocol::GetProtocol));
 
-	if(status) goto error;
+	if(status) panic();
 
 	DEVICE_PATH_TO_TEXT_PROTOCOL *DP2TP;
 	status = bootsrv->locate_protocol(&PROTOCOL_GUID::DEVICE_PATH_TO_TEXT, 0, (void**)&DP2TP);
-	if(status) goto error;
+	if(status) panic();
 	puts(L"LIP->file_path: ");
 	puts(DP2TP->convert_devpath2text(LIP->file_path, 0, 0));
+	puts(L"\r\n");
+
+	DEVICE_PATH_FROM_TEXT_PROTOCOL *DPFTP;
+	status = bootsrv->locate_protocol(&PROTOCOL_GUID::DEVICE_PATH_FROM_TEXT, 0, (void**)&DPFTP);
+	if(status) panic();
+
+	auto dev_path = DPFTP->convert_text2devpath((char16*)L"\\test.efi");
+	puts(L"dev_path: ");
+	puts(DP2TP->convert_devpath2text(dev_path, 0, 0));
 
 // fin
 	while(true);
-error:
-	panic();
 }
