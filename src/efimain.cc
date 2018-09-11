@@ -1,5 +1,6 @@
 #include "efi.h"
 
+EFI::SYSTEM_TABLE *ST;
 EFI::GRAPHICS_OUTPUT_PROTOCOL *GOP;
 
 void draw_pixel(const size_t &x, const size_t &y, const EFI::GRAPHICS_OUTPUT_BLT_PIXEL &col){
@@ -28,19 +29,27 @@ void panic(){
 	boxfill(0, 0, GOP->mode->info->horizontal_resolution, GOP->mode->info->vertical_resolution, col);
 }
 
+template<typename T>
+void puts(T *str){
+	auto& con_out = ST->con_out;
+	con_out->output_string(con_out, (wchar_t*)(str));
+}
+
 void efi_main(void *image_handle, EFI::SYSTEM_TABLE *system_table){
 	using namespace EFI;
 
+	ST = system_table;
+
 	auto con_out = system_table->con_out;
 	con_out->clear_screen(con_out);
-	con_out->output_string(con_out, (wchar_t*)L"booting HELIOS...\n\r");
-	con_out->output_string(con_out, (wchar_t*)L"commit: " GIT_COMMIT_ID "(" GIT_COMMIT_DATE ")\n\r");
+	puts(L"booting HELIOS...\n\r");
+	puts(L"commit: " GIT_COMMIT_ID "(" GIT_COMMIT_DATE ")\n\r");
 
 	auto bootsrv = system_table->boot_services;
 	bootsrv->locate_protocol(&PROTOCOL_GUID::GRAPHICS_OUTPUT, 0, (void**)&GOP);
 
 	if(GOP->mode->info->pixel_format == GRAPHICS_OUTPUT_PROTOCOL::MODE::INFO::BGR){
-		con_out->output_string(con_out, (wchar_t*)L"BGR\r\n");
+		puts(L"BGR\r\n");
 	}
 
 	color_t col;
@@ -59,8 +68,8 @@ void efi_main(void *image_handle, EFI::SYSTEM_TABLE *system_table){
 	DEVICE_PATH_TO_TEXT_PROTOCOL *DP2TP;
 	status = bootsrv->locate_protocol(&PROTOCOL_GUID::DEVICE_PATH_TO_TEXT, 0, (void**)&DP2TP);
 	if(status) goto error;
-	con_out->output_string(con_out, (wchar_t*)L"LIP->file_path: ");
-	con_out->output_string(con_out, (wchar_t*)DP2TP->convert_devpath2text(LIP->file_path, 0, 0));
+	puts(L"LIP->file_path: ");
+	puts(DP2TP->convert_devpath2text(LIP->file_path, 0, 0));
 
 // fin
 	while(true);
